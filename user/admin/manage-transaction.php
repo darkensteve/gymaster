@@ -53,7 +53,7 @@
                 <ul class="space-y-1 font-medium">
                     <!-- Dashboard -->
                     <li>
-                        <a href="admin-dashboard.html" class="sidebar-menu-item">
+                        <a href="admin-dashboard.php" class="sidebar-menu-item">
                             <i class="fas fa-home"></i>
                             <span>Dashboard</span>
                         </a>
@@ -70,22 +70,22 @@
                         <div id="dropdown-management" class="hidden overflow-hidden transition-all duration-300 ease-in-out">
                             <ul class="pt-1 pb-1">
                                 <li>
-                                    <a href="manage-users.html" class="sidebar-dropdown-item">User</a>
+                                    <a href="manage-users.php" class="sidebar-dropdown-item">User</a>
                                 </li>
                                 <li>
-                                    <a href="manage-members.html" class="sidebar-dropdown-item">Member</a>
+                                    <a href="manage-members.php" class="sidebar-dropdown-item">Member</a>
                                 </li>
                                 <li>
-                                    <a href="manage-programs-coaches.html" class="sidebar-dropdown-item">Program & Coach</a>
+                                    <a href="manage-programs-coaches.php" class="sidebar-dropdown-item">Program & Coach</a>
                                 </li>
                                 <li>
-                                    <a href="manage-comorbidities.html" class="sidebar-dropdown-item">Comorbidities</a>
+                                    <a href="manage-comorbidities.php" class="sidebar-dropdown-item">Comorbidities</a>
                                 </li>
                                 <li>
-                                    <a href="manage-subscription.html" class="sidebar-dropdown-item">Subscription</a>
+                                    <a href="manage-subscription.php" class="sidebar-dropdown-item">Subscription</a>
                                 </li>
                                 <li>
-                                    <a href="manage-payment.html" class="sidebar-dropdown-item">Payment</a>
+                                    <a href="manage-payment.php" class="sidebar-dropdown-item">Payment</a>
                                 </li>
                             </ul>
                         </div>
@@ -93,7 +93,7 @@
                     
                     <!-- Transaction -->
                     <li class="mt-2">
-                        <a href="manage-transaction.html" class="sidebar-menu-item active">
+                        <a href="manage-transaction.php" class="sidebar-menu-item active">
                             <i class="fas fa-exchange-alt"></i>
                             <span>Transaction</span>
                         </a>
@@ -131,7 +131,7 @@
                         <div class="h-8 w-px bg-gray-200 mx-2"></div>
                         
                         <!-- User Profile -->
-                        <a href="edit-profile.html" class="flex items-center space-x-3 pr-2 cursor-pointer">
+                        <a href="edit-profile.php" class="flex items-center space-x-3 pr-2 cursor-pointer">
                             <div class="text-right hidden sm:block">
                                 <p class="text-sm font-medium text-gray-700">John Doe</p>
                                 <p class="text-xs text-gray-500">Administrator</p>
@@ -148,18 +148,63 @@
         <div class="container mx-auto px-4 py-4">
             <!-- Transaction Summary Cards - Moved Above Filters -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <?php
+                // Fetch transaction statistics
+                require_once(__DIR__ . '/../../config/db_connect.php');
+
+                // Total Transactions
+                $totalQuery = "SELECT COUNT(*) as total FROM `TRANSACTION`";
+                $totalResult = mysqli_query($conn, $totalQuery);
+                $totalCount = mysqli_fetch_assoc($totalResult)['total'];
+
+                // Total Revenue
+                $revenueQuery = "SELECT SUM(s.PRICE) as total_revenue 
+                                 FROM `TRANSACTION` t
+                                 JOIN SUBSCRIPTION s ON t.SUB_ID = s.SUB_ID";
+                $revenueResult = mysqli_query($conn, $revenueQuery);
+                $totalRevenue = mysqli_fetch_assoc($revenueResult)['total_revenue'] ?: 0;
+
+                // Recent Transactions (Last 30 days)
+                $recentQuery = "SELECT COUNT(*) as recent 
+                                FROM `TRANSACTION` 
+                                WHERE TRANSAC_DATE >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                $recentResult = mysqli_query($conn, $recentQuery);
+                $recentCount = mysqli_fetch_assoc($recentResult)['recent'];
+
+                // Expiring Subscriptions (Next 7 days)
+                $expiringQuery = "SELECT COUNT(*) as expiring 
+                                 FROM MEMBER_SUBSCRIPTION 
+                                 WHERE END_DATE BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                                 AND IS_ACTIVE = 1";
+                $expiringResult = mysqli_query($conn, $expiringQuery);
+                $expiringCount = mysqli_fetch_assoc($expiringResult)['expiring'];
+
+                // Calculate growth percentages
+                $prevMonthQuery = "SELECT COUNT(*) as prev_count 
+                                  FROM `TRANSACTION` 
+                                  WHERE TRANSAC_DATE BETWEEN DATE_SUB(CURDATE(), INTERVAL 60 DAY) 
+                                  AND DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                $prevMonthResult = mysqli_query($conn, $prevMonthQuery);
+                $prevMonthCount = mysqli_fetch_assoc($prevMonthResult)['prev_count'];
+
+                $transactionGrowth = $prevMonthCount > 0 ? 
+                    round((($recentCount - $prevMonthCount) / $prevMonthCount) * 100, 1) : 0;
+                ?>
+                
                 <div class="bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow duration-300">
                     <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Total Transactions</h3>
-                    <p class="text-3xl font-bold text-gray-800" id="totalTransactions">0</p>
+                    <p class="text-3xl font-bold text-gray-800" id="totalTransactions"><?php echo number_format($totalCount); ?></p>
                     <div class="flex items-center mt-2">
-                        <span class="text-green-600 text-sm mr-1" id="transactionGrowth">+0%</span>
+                        <span class="<?php echo $transactionGrowth >= 0 ? 'text-green-600' : 'text-red-600'; ?> text-sm mr-1" id="transactionGrowth">
+                            <?php echo ($transactionGrowth >= 0 ? '+' : '') . $transactionGrowth; ?>%
+                        </span>
                         <span class="text-gray-500 text-sm">vs previous period</span>
                     </div>
                 </div>
                 
                 <div class="bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow duration-300">
                     <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Total Revenue</h3>
-                    <p class="text-3xl font-bold text-gray-800" id="totalRevenue">$0.00</p>
+                    <p class="text-3xl font-bold text-gray-800" id="totalRevenue">₱<?php echo number_format($totalRevenue, 2); ?></p>
                     <div class="flex items-center mt-2">
                         <span class="text-green-600 text-sm mr-1" id="revenueGrowth">+0%</span>
                         <span class="text-gray-500 text-sm">vs previous period</span>
@@ -168,17 +213,16 @@
                 
                 <div class="bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow duration-300">
                     <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Recent Transactions</h3>
-                    <p class="text-3xl font-bold text-gray-800" id="recentTransactions">0</p>
+                    <p class="text-3xl font-bold text-gray-800" id="recentTransactions"><?php echo number_format($recentCount); ?></p>
                     <div class="flex items-center mt-2">
-                        <span class="text-green-600 text-sm mr-1">+0%</span>
-                        <span class="text-gray-500 text-sm">vs previous period</span>
+                        <span class="text-gray-500 text-sm">Last 30 days</span>
                     </div>
                 </div>
                 
                 <!-- New Card: Expiring Subscriptions -->
                 <div class="bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow duration-300">
                     <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Expiring Soon</h3>
-                    <p class="text-3xl font-bold text-orange-500" id="expiringSubscriptions">0</p>
+                    <p class="text-3xl font-bold text-orange-500" id="expiringSubscriptions"><?php echo number_format($expiringCount); ?></p>
                     <div class="flex items-center mt-2">
                         <span class="text-orange-600 text-sm mr-1">
                             <i class="fas fa-clock"></i>
@@ -224,10 +268,14 @@
                             </div>
                             <select id="subFilter" class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200 appearance-none bg-white">
                                 <option value="all">All Subscriptions</option>
-                                <option value="1">Monthly</option>
-                                <option value="2">Quarterly</option>
-                                <option value="3">Annually</option>
-                                <option value="4">Trial</option>
+                                <?php
+                                // Fetch subscriptions
+                                $subQuery = "SELECT SUB_ID, SUB_NAME FROM SUBSCRIPTION WHERE IS_ACTIVE = 1 ORDER BY SUB_NAME";
+                                $subResult = mysqli_query($conn, $subQuery);
+                                while ($sub = mysqli_fetch_assoc($subResult)) {
+                                    echo "<option value='{$sub['SUB_ID']}'>{$sub['SUB_NAME']}</option>";
+                                }
+                                ?>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -244,12 +292,14 @@
                             </div>
                             <select id="programFilter" class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200 appearance-none bg-white">
                                 <option value="all">All Programs</option>
-                                <option value="1">Weight Loss</option>
-                                <option value="2">Muscle Building</option>
-                                <option value="3">Cardio Fitness</option>
-                                <option value="4">Yoga & Flexibility</option>
-                                <option value="5">Strength Training</option>
-                                <option value="6">Personal Training</option>
+                                <?php
+                                // Fetch programs
+                                $programQuery = "SELECT PROGRAM_ID, PROGRAM_NAME FROM PROGRAM WHERE IS_ACTIVE = 1 ORDER BY PROGRAM_NAME";
+                                $programResult = mysqli_query($conn, $programQuery);
+                                while ($program = mysqli_fetch_assoc($programResult)) {
+                                    echo "<option value='{$program['PROGRAM_ID']}'>{$program['PROGRAM_NAME']}</option>";
+                                }
+                                ?>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -325,97 +375,104 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200" id="subscriptionStatusBody">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-white text-xs">JD</div>
-                                            <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900">John Doe</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Monthly Membership</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Dec 1, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Dec 31, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Nov 30, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <button class="text-red-600 hover:text-red-800 transition-colors" title="Deactivate subscription" data-sub-id="1001" data-action="deactivate">
-                                            <i class="fas fa-toggle-off"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-white text-xs">JS</div>
-                                            <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900">Jane Smith</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Quarterly Membership</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Oct 15, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Jan 15, 2024</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Oct 15, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Expiring Soon</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <button class="text-red-600 hover:text-red-800 transition-colors" title="Deactivate subscription" data-sub-id="1002" data-action="deactivate">
-                                            <i class="fas fa-toggle-off"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- Example of an inactive subscription -->
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-white text-xs">RJ</div>
-                                            <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900">Robert Johnson</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Annual Membership</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Jan 10, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Dec 10, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">Jan 5, 2023</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <button class="text-green-600 hover:text-green-800 transition-colors" title="Renew subscription" data-sub-id="1003" data-action="renew">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                <?php
+                                // Database connection
+                                require_once(__DIR__ . '/../../config/db_connect.php');
+
+                                // Query to fetch member subscriptions with member and subscription details
+                                $query = "SELECT 
+                                            m.MEMBER_ID,
+                                            CONCAT(m.MEMBER_FNAME, ' ', m.MEMBER_LNAME) as MEMBER_NAME,
+                                            s.SUB_NAME,
+                                            ms.START_DATE,
+                                            ms.END_DATE,
+                                            t.TRANSAC_DATE as PAID_DATE,
+                                            ms.IS_ACTIVE,
+                                            SUBSTRING(m.MEMBER_FNAME, 1, 1) as FNAME_INITIAL,
+                                            SUBSTRING(m.MEMBER_LNAME, 1, 1) as LNAME_INITIAL
+                                        FROM MEMBER_SUBSCRIPTION ms
+                                        JOIN MEMBER m ON ms.MEMBER_ID = m.MEMBER_ID
+                                        JOIN SUBSCRIPTION s ON ms.SUB_ID = s.SUB_ID
+                                        LEFT JOIN TRANSACTION t ON ms.MEMBER_ID = t.MEMBER_ID AND ms.SUB_ID = t.SUB_ID
+                                        ORDER BY ms.START_DATE DESC";
+
+                                $result = mysqli_query($conn, $query);
+
+                                if (mysqli_num_rows($result) > 0) {
+                                    while ($row = mysqli_fetch_assoc($result)) {
+                                        // Calculate status
+                                        $today = new DateTime();
+                                        $endDate = new DateTime($row['END_DATE']);
+                                        $dateDiff = $today->diff($endDate)->days;
+                                        
+                                        $statusClass = '';
+                                        $statusText = '';
+                                        if (!$row['IS_ACTIVE']) {
+                                            $statusClass = 'bg-red-100 text-red-800';
+                                            $statusText = 'Inactive';
+                                        } elseif ($endDate < $today) {
+                                            $statusClass = 'bg-red-100 text-red-800';
+                                            $statusText = 'Expired';
+                                        } elseif ($dateDiff <= 7) {
+                                            $statusClass = 'bg-yellow-100 text-yellow-800';
+                                            $statusText = 'Expiring Soon';
+                                        } else {
+                                            $statusClass = 'bg-green-100 text-green-800';
+                                            $statusText = 'Active';
+                                        }
+                                        ?>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-white text-xs">
+                                                        <?php echo $row['FNAME_INITIAL'] . $row['LNAME_INITIAL']; ?>
+                                                    </div>
+                                                    <div class="ml-3">
+                                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($row['MEMBER_NAME']); ?></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900"><?php echo htmlspecialchars($row['SUB_NAME']); ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900"><?php echo date('M j, Y', strtotime($row['START_DATE'])); ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900"><?php echo date('M j, Y', strtotime($row['END_DATE'])); ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900"><?php echo $row['PAID_DATE'] ? date('M j, Y', strtotime($row['PAID_DATE'])) : '-'; ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                                    <?php echo $statusText; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                <?php if (!$row['IS_ACTIVE'] || $statusText === 'Expired') : ?>
+                                                    <button class="text-green-600 hover:text-green-800 transition-colors" 
+                                                            title="Renew subscription" 
+                                                            data-sub-id="<?php echo $row['MEMBER_ID']; ?>" 
+                                                            data-action="renew">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </button>
+                                                <?php else : ?>
+                                                    <button class="text-red-600 hover:text-red-800 transition-colors" 
+                                                            title="Deactivate subscription" 
+                                                            data-sub-id="<?php echo $row['MEMBER_ID']; ?>" 
+                                                            data-action="deactivate">
+                                                        <i class="fas fa-toggle-off"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                } else {
+                                    echo '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No subscriptions found</td></tr>';
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
@@ -507,9 +564,16 @@
                             </div>
                             <select id="subscriptionSelect" class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200 appearance-none bg-white">
                                 <option value="">Select Subscription</option>
-                                <option value="1" data-duration="1 Month" data-price="49.99">Monthly Membership ($49.99)</option>
-                                <option value="2" data-duration="3 Months" data-price="129.99">Quarterly Membership ($129.99)</option>
-                                <option value="3" data-duration="12 Months" data-price="499.99">Annual Membership ($499.99)</option>
+                                <?php
+                                // Fetch subscriptions with price and duration for the modal
+                                $subModalQuery = "SELECT SUB_ID, SUB_NAME, DURATION, PRICE FROM SUBSCRIPTION WHERE IS_ACTIVE = 1 ORDER BY SUB_NAME";
+                                $subModalResult = mysqli_query($conn, $subModalQuery);
+                                while ($sub = mysqli_fetch_assoc($subModalResult)) {
+                                    echo "<option value='{$sub['SUB_ID']}' data-duration='{$sub['DURATION']} Days' data-price='{$sub['PRICE']}'>";
+                                    echo "{$sub['SUB_NAME']} (₱" . number_format($sub['PRICE'], 2) . ")";
+                                    echo "</option>";
+                                }
+                                ?>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -979,7 +1043,7 @@
             if (confirmLogout) {
                 confirmLogout.addEventListener('click', function() {
                     // Navigate to login page
-                    window.location.href = "../../login.html";
+                    window.location.href = "../../login.php";
                 });
             }
 
@@ -1152,50 +1216,73 @@
             initActionButtons();
 
             function initActionButtons() {
-                // Deactivate subscription - Needs confirmation
+                // Deactivate subscription buttons
                 document.querySelectorAll('[data-action="deactivate"]').forEach(button => {
                     button.addEventListener('click', function() {
-                        const subId = this.getAttribute('data-sub-id');
-                        // Show confirmation dialog for deactivation
+                        const memberId = this.getAttribute('data-sub-id');
+                        const row = this.closest('tr');
+                        const memberName = row.querySelector('td:nth-child(1) .text-sm.font-medium').textContent;
+                        
                         showConfirmationDialog(
                             'Confirm Deactivation',
-                            'Are you sure you want to deactivate this subscription?',
+                            `Are you sure you want to deactivate the subscription for ${memberName}?`,
                             () => {
                                 // Show loading state
                                 const originalHTML = this.innerHTML;
                                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                                 this.disabled = true;
 
-                                // Simulate network request
-                                setTimeout(() => {
-                                    // Update UI
-                                    const row = this.closest('tr');
-                                    const statusCell = row.querySelector('td:nth-child(6) span');
-                                    statusCell.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800';
-                                    statusCell.textContent = 'Inactive';
+                                // Make AJAX call to deactivate subscription
+                                fetch('../../api/deactivate_subscription.php', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded',
+                                    },
+                                    body: `memberId=${memberId}`
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Update UI
+                                        const statusCell = row.querySelector('td:nth-child(6) span');
+                                        statusCell.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800';
+                                        statusCell.textContent = 'Inactive';
 
-                                    // Create a new renew button with proper event handling
-                                    const newRenewButton = document.createElement('button');
-                                    newRenewButton.className = 'text-green-600 hover:text-green-800 transition-colors';
-                                    newRenewButton.title = 'Renew subscription';
-                                    newRenewButton.innerHTML = '<i class="fas fa-sync-alt"></i>';
-                                    newRenewButton.setAttribute('data-sub-id', subId);
-                                    newRenewButton.setAttribute('data-action', 'renew');
-                                    
-                                    // Replace the old button with the new one
-                                    this.parentNode.replaceChild(newRenewButton, this);
-                                    
-                                    // Explicitly add click event to the new button
-                                    newRenewButton.addEventListener('click', function() {
-                                        const row = this.closest('tr');
-                                        const memberName = row.querySelector('td:nth-child(1) .text-sm.font-medium').textContent;
-                                        const subscriptionName = row.querySelector('td:nth-child(2) .text-sm').textContent;
-                                        openRenewModal(memberName, subscriptionName);
-                                    });
+                                        // Replace deactivate button with renew button
+                                        const newRenewButton = document.createElement('button');
+                                        newRenewButton.className = 'text-green-600 hover:text-green-800 transition-colors';
+                                        newRenewButton.title = 'Renew subscription';
+                                        newRenewButton.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                                        newRenewButton.setAttribute('data-sub-id', memberId);
+                                        newRenewButton.setAttribute('data-action', 'renew');
+                                        
+                                        // Add click event to new renew button
+                                        newRenewButton.addEventListener('click', function() {
+                                            const memberName = row.querySelector('td:nth-child(1) .text-sm.font-medium').textContent;
+                                            const subscriptionName = row.querySelector('td:nth-child(2) .text-sm').textContent;
+                                            openRenewModal(memberName, subscriptionName);
+                                        });
 
-                                    // Show notification
-                                    showToast('Subscription deactivated successfully!', true);
-                                }, 800);
+                                        // Replace old button
+                                        this.parentNode.replaceChild(newRenewButton, this);
+
+                                        // Show success notification
+                                        showToast('Subscription deactivated successfully!', true);
+                                    } else {
+                                        // Show error notification
+                                        showToast(data.message || 'Error deactivating subscription', false);
+                                        // Reset button
+                                        this.innerHTML = originalHTML;
+                                        this.disabled = false;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showToast('Error deactivating subscription', false);
+                                    // Reset button
+                                    this.innerHTML = originalHTML;
+                                    this.disabled = false;
+                                });
                             }
                         );
                     });
@@ -1547,14 +1634,109 @@
             const applyFiltersBtn = document.getElementById('applyFiltersBtn');
             if (applyFiltersBtn) {
                 applyFiltersBtn.addEventListener('click', function() {
-                    // In a real implementation, this would gather filter values and reload data
-                    showToast('Applying filters...', true);
-                    // Simulate filtering
-                    setTimeout(() => {
-                        // Reload transactions with filters
-                        loadTransactionData();
-                        showToast('Filters applied!', true);
-                    }, 500);
+                    // Show loading state
+                    this.disabled = true;
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+
+                    // Get filter values
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    const subscription = document.getElementById('subFilter').value;
+                    const program = document.getElementById('programFilter').value;
+                    const member = document.getElementById('memberSearch').value;
+
+                    // Build query string
+                    const params = new URLSearchParams({
+                        startDate,
+                        endDate,
+                        subscription,
+                        program,
+                        member
+                    });
+
+                    // Fetch filtered data
+                    fetch(`../../api/filter_transactions.php?${params}`)
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.success) {
+                                // Update the subscription status table
+                                const tbody = document.getElementById('subscriptionStatusBody');
+                                if (response.data.length > 0) {
+                                    tbody.innerHTML = response.data.map(sub => `
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-white text-xs">
+                                                        ${sub.memberInitials}
+                                                    </div>
+                                                    <div class="ml-3">
+                                                        <div class="text-sm font-medium text-gray-900">${sub.memberName}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${sub.subscriptionName}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${sub.startDate}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${sub.endDate}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">${sub.paidDate}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${sub.statusClass}">
+                                                    ${sub.status}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                                ${!sub.isActive || sub.status === 'Expired' ? `
+                                                    <button class="text-green-600 hover:text-green-800 transition-colors" 
+                                                            title="Renew subscription" 
+                                                            data-sub-id="${sub.memberId}" 
+                                                            data-action="renew">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </button>
+                                                ` : `
+                                                    <button class="text-red-600 hover:text-red-800 transition-colors" 
+                                                            title="Deactivate subscription" 
+                                                            data-sub-id="${sub.memberId}" 
+                                                            data-action="deactivate">
+                                                        <i class="fas fa-toggle-off"></i>
+                                                    </button>
+                                                `}
+                                            </td>
+                                        </tr>
+                                    `).join('');
+
+                                    // Reinitialize action buttons
+                                    initActionButtons();
+                                } else {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                                No subscriptions found matching the filters
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                                showToast('Filters applied successfully!', true);
+                            } else {
+                                showToast('Error applying filters: ' + response.message, false);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToast('Error applying filters', false);
+                        })
+                        .finally(() => {
+                            // Reset button state
+                            this.disabled = false;
+                            this.innerHTML = originalText;
+                        });
                 });
             }
 
@@ -1907,5 +2089,11 @@
             });
         });
     </script>
+    <?php
+    // Move the database close to the end of the file, after all queries are done
+    if (isset($conn)) {
+        mysqli_close($conn);
+    }
+    ?>
 </body>
 </html>
