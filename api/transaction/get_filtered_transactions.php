@@ -4,92 +4,125 @@ require_once '../../config/database.php';
 
 try {
     // Get filter parameters
-    $startDate = $_GET['startDate'] ?? null;
-    $endDate = $_GET['endDate'] ?? null;
-    $subscriptionId = $_GET['subscriptionId'] ?? null;
-    $programId = $_GET['programId'] ?? null;
-    $memberSearch = $_GET['memberSearch'] ?? null;
+    $startDate = $_GET['startDate'] ?? '';
+    $endDate = $_GET['endDate'] ?? '';
+    $subId = $_GET['subscription'] ?? 'all';
+    $programId = $_GET['program'] ?? 'all';
+    $searchTerm = $_GET['search'] ?? '';
 
-    // Build base query
-    $query = "SELECT 
-                ms.MEMBER_ID,
-                ms.SUB_ID,
-                ms.START_DATE,
-                ms.END_DATE,
-                ms.IS_ACTIVE as SUB_ACTIVE,
-                m.MEMBER_FNAME,
-                m.MEMBER_LNAME,
-                m.EMAIL,
-                m.PROGRAM_ID,
-                s.SUB_NAME,
-                s.PRICE,
-                t.TRANSAC_DATE as PAID_DATE,
-                p.PAY_METHOD
-              FROM MEMBER_SUBSCRIPTION ms
-              JOIN `MEMBER` m ON ms.MEMBER_ID = m.MEMBER_ID
-              JOIN SUBSCRIPTION s ON ms.SUB_ID = s.SUB_ID
-              LEFT JOIN `TRANSACTION` t ON ms.MEMBER_ID = t.MEMBER_ID AND ms.SUB_ID = t.SUB_ID
-              LEFT JOIN PAYMENT p ON t.PAYMENT_ID = p.PAYMENT_ID
-              WHERE 1=1";
+    // Base query with improved joins and conditions
+    $query = "SELECT DISTINCT
+        m.MEMBER_ID,
+        m.MEMBER_FNAME,
+        m.MEMBER_LNAME,
+        m.EMAIL,
+        s.SUB_NAME,
+        ms.START_DATE,
+        ms.END_DATE,
+        ms.IS_ACTIVE as SUB_ACTIVE,
+        t.TRANSAC_DATE as PAID_DATE,
+        p.PAY_METHOD,
+        pr.PROGRAM_NAME,
+        pr.PROGRAM_ID
+    FROM MEMBER_SUBSCRIPTION ms
+    INNER JOIN `MEMBER` m ON ms.MEMBER_ID = m.MEMBER_ID
+    INNER JOIN SUBSCRIPTION s ON ms.SUB_ID = s.SUB_ID
+    INNER JOIN PROGRAM pr ON m.PROGRAM_ID = pr.PROGRAM_ID
+    LEFT JOIN `TRANSACTION` t ON (ms.MEMBER_ID = t.MEMBER_ID AND ms.SUB_ID = t.SUB_ID)
+    LEFT JOIN PAYMENT p ON t.PAYMENT_ID = p.PAYMENT_ID
+    WHERE 1=1";
 
-    $params = array();
-
-    // Add date range filter
-    if ($startDate && $endDate) {
-        $query .= " AND ms.START_DATE BETWEEN :startDate AND :endDate";
-        $params[':startDate'] = $startDate;
-        $params[':endDate'] = $endDate;
+    // Improved date filtering
+    if ($startDate) {
+        $query .= " AND (ms.START_DATE >= :startDate OR ms.END_DATE >= :startDate)";
+    }
+    if ($endDate) {
+        $query .= " AND (ms.START_DATE <= :endDate OR ms.END_DATE <= :endDate)";
     }
 
-    // Add subscription filter
-    if ($subscriptionId && $subscriptionId !== 'all') {
-        $query .= " AND s.SUB_ID = :subscriptionId";
-        $params[':subscriptionId'] = $subscriptionId;
+    // Subscription filter
+    if ($subId !== 'all') {
+        $query .= " AND s.SUB_ID = :subId";
     }
 
-    // Add program filter
-    if ($programId && $programId !== 'all') {
-        $query .= " AND m.PROGRAM_ID = :programId";
-        $params[':programId'] = $programId;
+    // Program filter
+    if ($programId !== 'all') {
+        $query .= " AND pr.PROGRAM_ID = :programId";
     }
 
-    // Add member search filter
-    if ($memberSearch) {
-        $query .= " AND (m.MEMBER_FNAME LIKE :memberSearch 
-                        OR m.MEMBER_LNAME LIKE :memberSearch 
-                        OR m.EMAIL LIKE :memberSearch)";
-        $params[':memberSearch'] = "%$memberSearch%";
+    // Improved search condition
+    if ($searchTerm) {
+        $query .= " AND (
+            m.MEMBER_FNAME LIKE :search 
+            OR m.MEMBER_LNAME LIKE :search 
+            OR CONCAT(m.MEMBER_FNAME, ' ', m.MEMBER_LNAME) LIKE :search 
+            OR m.EMAIL LIKE :search
+        )";
     }
 
-    $query .= " ORDER BY ms.END_DATE ASC";
+    // Add proper ordering
+    $query .= " ORDER BY 
+        CASE 
+            WHEN ms.END_DATE >= CURRENT_DATE AND ms.IS_ACTIVE = 1 THEN 1
+            WHEN ms.END_DATE < CURRENT_DATE THEN 2
+            ELSE 3
+        END,
+        ms.END_DATE ASC";
 
-    // Prepare and execute the query
     $stmt = $conn->prepare($query);
-    $stmt->execute($params);
-    $subscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Calculate subscription status based on end date
-    $today = new DateTime();
-    foreach ($subscriptions as &$subscription) {
-        $endDate = new DateTime($subscription['END_DATE']);
-        $daysLeft = $today->diff($endDate)->days;
+    // Bind parameters with proper date formatting
+    if ($startDate) {
+        $stmt->bindValue(':startDate', date('Y-m-d', strtotime($startDate)));
+    }
+    if ($endDate) {
+        $stmt->bindValue(':endDate', date('Y-m-d', strtotime($endDate)));
+    }
+    if ($subId !== 'all') {
+        $stmt->bindValue(':subId', $subId);
+    }
+    if ($programId !== 'all') {
+        $stmt->bindValue(':programId', $programId);
+    }
+    if ($searchTerm) {
+        $stmt->bindValue(':search', '%' . $searchTerm . '%');
+    }
+
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Process status for each result with more accurate status determination
+    foreach ($results as &$result) {
+        $endDate = new DateTime($result['END_DATE']);
+        $today = new DateTime();
+        $daysDiff = $today->diff($endDate)->days;
         $isPast = $today > $endDate;
         
-        if ($isPast || $subscription['SUB_ACTIVE'] == 0) {
-            $subscription['STATUS'] = 'Inactive';
-        } elseif ($daysLeft <= 7) {
-            $subscription['STATUS'] = 'Expiring Soon';
-            $subscription['DAYS_LEFT'] = $daysLeft;
+        if ($result['SUB_ACTIVE'] == 0) {
+            $result['STATUS'] = 'Inactive';
+            $result['STATUS_CLASS'] = 'bg-red-100 text-red-800';
+        } else if ($isPast) {
+            $result['STATUS'] = 'Expired';
+            $result['STATUS_CLASS'] = 'bg-red-100 text-red-800';
+        } else if ($daysDiff <= 7) {
+            $result['STATUS'] = 'Expiring Soon';
+            $result['STATUS_CLASS'] = 'bg-yellow-100 text-yellow-800';
         } else {
-            $subscription['STATUS'] = 'Active';
-            $subscription['DAYS_LEFT'] = $daysLeft;
+            $result['STATUS'] = 'Active';
+            $result['STATUS_CLASS'] = 'bg-green-100 text-green-800';
         }
+
+        // Format dates for display
+        $result['START_DATE'] = date('M d, Y', strtotime($result['START_DATE']));
+        $result['END_DATE'] = date('M d, Y', strtotime($result['END_DATE']));
+        $result['PAID_DATE'] = $result['PAID_DATE'] ? date('M d, Y', strtotime($result['PAID_DATE'])) : '-';
     }
 
     echo json_encode([
         'success' => true,
-        'subscriptions' => $subscriptions
+        'data' => $results
     ]);
+
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
