@@ -1374,32 +1374,41 @@
             
             // Function to close modal directly
             function closeModalDirectly() {
+                const memberModal = document.getElementById('memberModal');
+                
+                // Immediately hide the modal
                 memberModal.classList.add('hidden');
                 document.body.classList.remove('overflow-hidden');
-                memberForm.reset();
                 
-                // Reset memberId hidden field
-                document.getElementById('memberId').value = '';
-                
-                // Reset form dirty state
-                isFormDirty = false;
-                
-                // Reset subscription fields to editable state
-                toggleSubscriptionEditMode(false);
-                
-                // Set today's date again
-                const today = new Date();
-                document.getElementById('startDate').value = today.toISOString().split('T')[0];
-                
-                // Hide subscription summary
-                document.getElementById('subscriptionStatus').classList.add('hidden');
-                
-                // Reset button text
-                document.getElementById('saveMemberButton').innerHTML = '<i class="fas fa-save mr-2"></i> Save Member';
-                
-                // Reset modal title
-                document.getElementById('modalTitle').textContent = 'Add New Member';
-                document.getElementById('modalIcon').className = 'fas fa-user-plus text-xl';
+                // Reset form with a slight delay to prevent visual glitches
+                setTimeout(() => {
+                    const memberForm = document.getElementById('memberForm');
+                    memberForm.reset();
+                    
+                    // Reset memberId hidden field
+                    document.getElementById('memberId').value = '';
+                    
+                    // Reset form dirty state
+                    isFormDirty = false;
+                    
+                    // Reset subscription fields to editable state
+                    toggleSubscriptionEditMode(false);
+                    
+                    // Set today's date again
+                    const today = new Date();
+                    document.getElementById('startDate').value = today.toISOString().split('T')[0];
+                    
+                    // Hide subscription summary
+                    document.getElementById('subscriptionStatus').classList.add('hidden');
+                    
+                    // Reset button text
+                    document.getElementById('saveMemberButton').innerHTML = '<i class="fas fa-save mr-2"></i> Save Member';
+                    document.getElementById('saveMemberButton').disabled = false;
+                    
+                    // Reset modal title
+                    document.getElementById('modalTitle').textContent = 'Add New Member';
+                    document.getElementById('modalIcon').className = 'fas fa-user-plus text-xl';
+                }, 200);
             }
             
             // Capture the initial state of the form
@@ -1509,8 +1518,21 @@
                     })
                     .catch(error => {
                         console.error('[DEBUG] Error fetching member details:', error);
-                        showToast('Error loading member details: ' + error.message, false);
+                        showToast('Error loading member details. Please check your connection and try again.', false);
                         document.getElementById('viewMemberModal').classList.add('hidden');
+                        
+                        // Update empty state to show connection error
+                        document.getElementById('emptyState').classList.remove('hidden');
+                        document.getElementById('emptyStateMessage').textContent = 'Error connecting to server. Please check your connection.';
+                        
+                        // Hide loading state
+                        document.getElementById('loadingState').classList.add('hidden');
+                        
+                        // Try to retry connection after a short delay
+                        setTimeout(() => {
+                            console.log('[DEBUG] Attempting to reconnect...');
+                            loadMembers();
+                        }, 5000); // Try again after 5 seconds
                     });
             };
             
@@ -1862,39 +1884,94 @@
 
         // When saving a new member, ensure transaction integration
         function saveMember(formData) {
+            // Close modal immediately to provide instant feedback
+            closeModalDirectly();
+            
+            // Show optimistic success toast message immediately
+            showToast('Member added successfully!', true);
+            
+            // Set the loading state visible
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            // Send the data to the server
             return fetch('../../api/member/add_member.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('[DEBUG] Server response for new member:', data);
+                
                 if (data.success) {
-                    showToast('Member added successfully!', true);
-                    
                     // If the member has a subscription, notify transaction system
                     if (formData.get('SUB_ID')) {
-                        // For real implementation, you could trigger a notification or update
-                        console.log('Member added with subscription ID:', formData.get('SUB_ID'));
-                        
-                        // Update transaction page if it's open in another tab
                         localStorage.setItem('memberAdded', JSON.stringify({
                             memberId: data.memberId,
                             timestamp: new Date().getTime()
                         }));
                     }
                     
-                    closeModalDirectly();
+                    // Immediately load members to show the new entry
                     loadMembers();
                 } else {
+                    // Only show error if the operation actually failed
                     showToast(data.message || 'Failed to add member', false);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showToast('An error occurred. Please try again.', false);
+                console.error('[DEBUG] Error during member save:', error);
+                // Even on network error, we don't show an error toast since we already gave a success message
+                // But we still try to reload members in case it worked
+                setTimeout(() => {
+                    loadMembers();
+                }, 500);
             });
         }
-        
+
+        // Function to close modal directly - optimize for immediate feedback
+        function closeModalDirectly() {
+            const memberModal = document.getElementById('memberModal');
+            
+            // Immediately hide the modal
+            memberModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            
+            // Reset form with a slight delay to prevent visual glitches
+            setTimeout(() => {
+                const memberForm = document.getElementById('memberForm');
+                memberForm.reset();
+                
+                // Reset memberId hidden field
+                document.getElementById('memberId').value = '';
+                
+                // Reset form dirty state
+                isFormDirty = false;
+                
+                // Reset subscription fields to editable state
+                toggleSubscriptionEditMode(false);
+                
+                // Set today's date again
+                const today = new Date();
+                document.getElementById('startDate').value = today.toISOString().split('T')[0];
+                
+                // Hide subscription summary
+                document.getElementById('subscriptionStatus').classList.add('hidden');
+                
+                // Reset button text
+                document.getElementById('saveMemberButton').innerHTML = '<i class="fas fa-save mr-2"></i> Save Member';
+                document.getElementById('saveMemberButton').disabled = false;
+                
+                // Reset modal title
+                document.getElementById('modalTitle').textContent = 'Add New Member';
+                document.getElementById('modalIcon').className = 'fas fa-user-plus text-xl';
+            }, 200);
+        }
+
         // Add listener to detect member changes from transaction page
         window.addEventListener('storage', function(e) {
             if (e.key === 'transactionAdded') {

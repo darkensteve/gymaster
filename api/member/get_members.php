@@ -4,7 +4,7 @@ require_once '../../config/database.php';
 
 try {
     // Modified query to prevent duplicates by using GROUP BY on MEMBER_ID
-    // Also improved the JOIN structure for coaches
+    // Also improved the JOIN structure for coaches and subscriptions
     $query = "SELECT 
                 m.MEMBER_ID, 
                 m.MEMBER_FNAME, 
@@ -17,6 +17,7 @@ try {
                 p.PROGRAM_NAME,
                 ms.START_DATE,
                 ms.END_DATE,
+                ms.IS_ACTIVE as SUB_ACTIVE,
                 s.SUB_NAME,
                 s.SUB_ID,
                 c.COACH_FNAME,
@@ -25,11 +26,12 @@ try {
               FROM `MEMBER` m
               LEFT JOIN PROGRAM p ON m.PROGRAM_ID = p.PROGRAM_ID
               LEFT JOIN (
-                SELECT MEMBER_ID, SUB_ID, START_DATE, END_DATE
-                FROM MEMBER_SUBSCRIPTION
-                WHERE (END_DATE >= CURRENT_DATE() OR END_DATE IS NULL)
-                GROUP BY MEMBER_ID
-                ORDER BY START_DATE DESC
+                SELECT ms1.*
+                FROM MEMBER_SUBSCRIPTION ms1
+                LEFT JOIN MEMBER_SUBSCRIPTION ms2 
+                  ON ms1.MEMBER_ID = ms2.MEMBER_ID 
+                  AND ms1.START_DATE < ms2.START_DATE
+                WHERE ms2.MEMBER_ID IS NULL
               ) ms ON m.MEMBER_ID = ms.MEMBER_ID
               LEFT JOIN SUBSCRIPTION s ON ms.SUB_ID = s.SUB_ID
               LEFT JOIN MEMBER_COACH mc ON m.MEMBER_ID = mc.MEMBER_ID
@@ -51,6 +53,7 @@ try {
                     p.PROGRAM_NAME,
                     ms.START_DATE,
                     ms.END_DATE,
+                    ms.IS_ACTIVE as SUB_ACTIVE,
                     s.SUB_NAME,
                     s.SUB_ID,
                     c.COACH_FNAME,
@@ -59,11 +62,12 @@ try {
                   FROM `MEMBER` m
                   LEFT JOIN PROGRAM p ON m.PROGRAM_ID = p.PROGRAM_ID
                   LEFT JOIN (
-                    SELECT MEMBER_ID, SUB_ID, START_DATE, END_DATE
-                    FROM MEMBER_SUBSCRIPTION
-                    WHERE (END_DATE >= CURRENT_DATE() OR END_DATE IS NULL)
-                    GROUP BY MEMBER_ID
-                    ORDER BY START_DATE DESC
+                    SELECT ms1.*
+                    FROM MEMBER_SUBSCRIPTION ms1
+                    LEFT JOIN MEMBER_SUBSCRIPTION ms2 
+                      ON ms1.MEMBER_ID = ms2.MEMBER_ID 
+                      AND ms1.START_DATE < ms2.START_DATE
+                    WHERE ms2.MEMBER_ID IS NULL
                   ) ms ON m.MEMBER_ID = ms.MEMBER_ID
                   LEFT JOIN SUBSCRIPTION s ON ms.SUB_ID = s.SUB_ID
                   LEFT JOIN MEMBER_COACH mc ON m.MEMBER_ID = mc.MEMBER_ID
