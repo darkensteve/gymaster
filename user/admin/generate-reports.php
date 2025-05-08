@@ -1160,7 +1160,75 @@
             
             // Initialize charts for reports
             // ...existing code...
+
+            // Fetch dropdown options
+            fetchDropdownOptions();
         });
+
+        // Function to fetch dropdown options
+        function fetchDropdownOptions() {
+            // Fetch subscription options
+            fetch('../../api/subscription/get_subscription_options.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateSubscriptionDropdown(data.subscriptions);
+                    } else {
+                        console.error('Error fetching subscription options');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching subscription options:', error);
+                });
+            
+            // Fetch payment method options
+            fetch('../../api/payment/get_payment_methods.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populatePaymentMethodDropdown(data.payment_methods);
+                    } else {
+                        console.error('Error fetching payment methods');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching payment methods:', error);
+                });
+        }
+
+        // Function to populate subscription dropdown
+        function populateSubscriptionDropdown(subscriptions) {
+            const subFilter = document.getElementById('subFilter');
+            if (subFilter) {
+                // Clear all options except the first one
+                while (subFilter.options.length > 1) {
+                    subFilter.remove(1);
+                }
+                
+                // Add new options from the data
+                subscriptions.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.text = sub.name;
+                    subFilter.appendChild(option);
+                });
+            }
+        }
+
+        // Function to populate payment method dropdown
+        function populatePaymentMethodDropdown(paymentMethods) {
+            const statusFilter = document.getElementById('statusFilter');
+            // We don't have a direct payment method filter in this page
+            // But if we wanted to add one in the future, the function is now available
+            
+            // For now, this function is included for consistency with other pages
+            console.log('Payment methods fetched successfully:', paymentMethods.length);
+        }
+
+        // Chart initialization functions
+        function initCharts() {
+            // ...existing code...
+        }
     </script>
 </body>
 </html>

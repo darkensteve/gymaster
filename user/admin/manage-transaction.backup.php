@@ -11,12 +11,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../../styles/admin-styles.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         tailwind.config = {
             theme: {
-                extend: {
+                extend: {   
                     colors: {
                         primary: {
                             dark: '#081738',
@@ -32,61 +30,6 @@
             }
         }
     </script>
-    <style>
-        /* Custom styles for filters section */
-        .flatpickr-calendar {
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .flatpickr-day.selected {
-            background: #081738;
-            border-color: #081738;
-        }
-        
-        .flatpickr-day.selected:hover {
-            background: #081738;
-            border-color: #081738;
-        }
-        
-        .flatpickr-day:hover {
-            background: #f0f4f8;
-        }
-        
-        /* Custom select styling */
-        select {
-            background-image: none;
-            appearance: none;
-        }
-        
-        /* Reset filters button */
-        #resetFiltersBtn {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: #495057;
-        }
-        
-        #resetFiltersBtn:hover {
-            background-color: #e9ecef;
-        }
-        
-        /* Apply filters button */
-        #applyFiltersBtn {
-            background-color: #081738;
-        }
-        
-        #applyFiltersBtn:hover {
-            background-color: #0f2a5c;
-        }
-        
-        /* Input focus styles */
-        input:focus, select:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
-        }
-    </style>
     <!-- Add CSS for the member search suggestions -->
     <style>
         /* Autocomplete suggestions styling */
@@ -292,17 +235,6 @@
             </div>
         </header>
 
-        <!-- Error Alert Banner -->
-        <div id="errorAlert" class="hidden bg-red-600 text-white py-3 px-4 mb-4 mx-4 rounded-md flex items-center justify-between">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                <span id="errorAlertMessage">Error applying filters. Please try again.</span>
-            </div>
-            <button onclick="document.getElementById('errorAlert').classList.add('hidden')" class="text-white focus:outline-none">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
         <div class="container mx-auto px-4 py-4">
             <!-- Transaction Summary Cards - Moved Above Filters -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -349,41 +281,33 @@
             <!-- Transaction Filters Section -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <h2 class="text-lg font-semibold text-primary-dark mb-4">Transaction Filters</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Start Date -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <!-- Custom Date Range - Start -->
                     <div>
-                        <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                        <div class="relative rounded-md">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                <i class="fas fa-calendar-alt"></i>
+                        <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary-light">
+                                <i class="fas fa-calendar-day"></i>
                             </div>
-                            <input type="text" id="startDate" class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="05/01/2025" readonly>
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('startDate').focus()">
-                                    <i class="fas fa-calendar-day"></i>
-                                </button>
-                            </div>
+                            <input type="date" id="startDate" class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200">
                         </div>
                     </div>
                     
-                    <!-- End Date -->
+                    <!-- Custom Date Range - End -->
                     <div>
-                        <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                        <div class="relative rounded-md">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                                <i class="fas fa-calendar-alt"></i>
+                        <label for="endDateInput" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary-light">
+                                <i class="fas fa-calendar-check"></i>
                             </div>
-                            <input type="text" id="endDate" class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="05/08/2025" readonly>
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('endDate').focus()">
-                                    <i class="fas fa-calendar-day"></i>
-                                </button>
-                            </div>
+                            <input type="text" id="endDateInput" placeholder="mm/dd/yyyy" class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200 bg-gray-50" readonly>
+                            <input type="hidden" id="endDateInputHidden">
+                            <small class="text-xs text-gray-500 mt-1 block">Auto-calculated based on duration</small>
                         </div>
                     </div>
 
-                    <!-- Subscription Dropdown -->
+                    <!-- Subscription Filter -->
                     <div>
                         <label for="subFilter" class="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
                         <div class="relative rounded-md shadow-sm">
@@ -828,14 +752,14 @@
     <!-- Transaction History Modal -->
     <div id="transactionHistoryModal" class="fixed inset-0 bg-black bg-opacity-30 z-[60] flex items-center justify-center hidden backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 transform scale-95 overflow-hidden transition-all duration-200">
-            <div class="flex items-center justify-between p-5 border-b border-gray-200">
+            <div class="flex items-center justify-between p-5 border-b border-gray-200">>
                 <h3 class="text-lg font-semibold text-gray-800">Transaction History</h3>
                 <button onclick="closeModal(document.getElementById('transactionHistoryModal'))" class="text-gray-400 hover:text-gray-500 focus:outline-none">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="p-5">
-                <div class="mb-4">
+                <div class="mb-4">riptions</h4>
                     <h4 class="font-medium text-gray-700 mb-2">Member Information</h4>
                     <div class="flex items-center">
                         <div class="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center text-white text-xs" id="historyMemberInitials">-</div>
@@ -1041,27 +965,22 @@
 
             // Function to fetch subscription data from API
             function fetchSubscriptionData() {
-                return new Promise((resolve, reject) => {
-                    fetch('../../api/subscription/get_subscriptions.php')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Update expiring subscriptions count
-                                document.getElementById('expiringSubscriptions').textContent = data.expiring_count;
-                                
-                                // Update subscription status table
-                                updateSubscriptionTable(data.subscriptions);
-                                resolve(data);
-                            } else {
-                                console.error('Error fetching subscription data');
-                                reject(new Error(data.message || 'Failed to fetch subscription data'));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching subscription data:', error);
-                            reject(error);
-                        });
-                });
+                fetch('../../api/subscription/get_subscriptions.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update expiring subscriptions count
+                            document.getElementById('expiringSubscriptions').textContent = data.expiring_count;
+                            
+                            // Update subscription status table
+                            updateSubscriptionTable(data.subscriptions);
+                        } else {
+                            console.error('Error fetching subscription data');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching subscription data:', error);
+                    });
             }
             
             // Function to update subscription status table
@@ -1653,58 +1572,75 @@
             // Function to open renew modal with pre-filled data
             function openRenewModal(memberName, subscriptionName) {
                 const modal = document.getElementById('addTransactionModal');
-                if (!modal) return;
-                
-                openModal(modal);
-                
-                // Set member details
-                const memberInitials = document.getElementById('memberInitials');
-                const memberNameElement = document.getElementById('memberName');
-                const memberEmail = document.getElementById('memberEmail');
-                const selectedMemberId = document.getElementById('selectedMemberId');
-                const changeMemberBtn = document.getElementById('changeMemberBtn');
-                
-                // Set member information
-                const initials = memberName.split(' ').map(n => n[0]).join('');
-                if (memberInitials) memberInitials.textContent = initials;
-                if (memberNameElement) memberNameElement.textContent = memberName;
-                if (memberEmail) memberEmail.textContent = memberName.toLowerCase().replace(' ', '.') + '@example.com';
-                if (selectedMemberId) selectedMemberId.value = '1001'; // This would be replaced with actual ID
-                
-                // Hide change button for renewals
-                if (changeMemberBtn) {
-                    changeMemberBtn.classList.add('hidden');
-                }
-                
-                // Pre-fill subscription select
-                const subscriptionSelect = document.getElementById('subscriptionSelect');
-                if (subscriptionSelect) {
+                if (modal) {
+                    // Show the modal first
+                    openModal(modal);
+                    
+                    // Get member search section and completely remove it for renewal modal
+                    const memberSearchContainer = document.getElementById('memberSearch').parentElement.parentElement;
+                    memberSearchContainer.classList.add('hidden');
+                    
+                    // Show member info without the search UI or change option
+                    const selectedMemberInfo = document.getElementById('selectedMemberInfo');
+                    selectedMemberInfo.classList.remove('hidden');
+                    
+                    // Replace the heading to indicate member is fixed for renewal
+                    const memberInfoSection = document.querySelector('.mb-1');
+                    if (memberInfoSection) {
+                        const memberHeading = memberInfoSection.querySelector('span');
+                        if (memberHeading) {
+                            memberHeading.textContent = "Member (Fixed for Renewal)";
+                        }
+                    }
+                    
+                    // Set member information in the static display
+                    const memberInitials = document.getElementById('memberInitials');
+                    const memberNameElement = document.getElementById('memberName');
+                    const memberEmail = document.getElementById('memberEmail');
+                    const selectedMemberId = document.getElementById('selectedMemberId');
+                    const changeMemberBtn = document.getElementById('changeMemberBtn');
+                    
+                    // Set member details
+                    const initials = memberName.split(' ').map(n => n[0]).join('');
+                    memberInitials.textContent = initials;
+                    memberNameElement.textContent = memberName;
+                    memberEmail.textContent = memberName.toLowerCase().replace(' ', '.') + '@example.com';
+                    selectedMemberId.value = '1001'; // This would be replaced with actual ID
+                    
+                    // Completely hide the change button for renewals
+                    if (changeMemberBtn) {
+                        changeMemberBtn.classList.add('hidden');
+                    }
+                    
+                    // Pre-fill subscription select
+                    const subscriptionSelect = document.getElementById('subscriptionSelect');
                     for (let i = 0; i < subscriptionSelect.options.length; i++) {
                         if (subscriptionSelect.options[i].text.includes(subscriptionName)) {
                             subscriptionSelect.selectedIndex = i;
                             break;
                         }
                     }
-                }
-                
-                // Set start date to today
-                const today = new Date();
-                
-                // Update start date fields
-                const startDateInput = document.getElementById('startDateInput');
-                if (startDateInput) {
-                    startDateInput.value = formatDisplayInputDate(today);
-                }
-                
-                const startDateInputHidden = document.getElementById('startDateInputHidden');
-                if (startDateInputHidden) {
-                    startDateInputHidden.value = formatDate(today);
-                }
-                
-                // Update end date
-                updateEndDateFromStartDate(today);
-            }
-        
+                    
+                    // Set start date to today
+                    const today = new Date();
+                    
+                    // Update visible start date field with mm/dd/yyyy format
+                    const startDateInput = document.getElementById('startDateInput');
+                    if (startDateInput) {
+                        startDateInput.value = formatDisplayInputDate(today);
+                    }
+                    
+                    // Store ISO date in hidden field
+                    const startDateInputHidden = document.getElementById('startDateInputHidden');
+                    if (startDateInputHidden) {
+                        startDateInputHidden.value = formatDate(today);
+                    }
+                    
+                    // Calculate and update end date
+                    updateEndDateFromStartDate(today);
+                    
+                    // Change modal title to indicate renewal
+            const endDateInput = document.getElementById('endDateInput');
             const submitTransactionBtn = document.getElementById('submitTransactionBtn');
             
             if (submitTransactionBtn) {
@@ -1712,17 +1648,6 @@
                 submitTransactionBtn.addEventListener('click', function() {
                     // Get form fields
                     const memberId = document.getElementById('selectedMemberId').value;
-                    const subscriptionSelect = document.getElementById('subscriptionSelect');
-                    const paymentSelect = document.getElementById('paymentSelect');
-                    const startDateInput = document.getElementById('startDateInput');
-                    const endDateInput = document.getElementById('endDateInput');
-                    
-                    // Check if elements exist
-                    if (!subscriptionSelect || !paymentSelect || !startDateInput || !endDateInput) {
-                        showToast('An error occurred: Form elements not found', false);
-                        return;
-                    }
-                    
                     const subscriptionId = subscriptionSelect.value;
                     const paymentMethod = paymentSelect.value;
                     const startDate = startDateInput.value;
@@ -1860,54 +1785,28 @@
                 // Create the filter badge
                 filterBadge = document.createElement('div');
                 filterBadge.id = 'filterBadge';
-                filterBadge.className = 'fixed top-4 right-4 z-40 flex items-center bg-blue-900 text-white px-4 py-3 rounded-md shadow-lg';
+                filterBadge.className = 'fixed top-4 right-4 z-40 flex items-center bg-green-600 text-white px-4 py-2 rounded-md shadow-lg';
+                
+                // Add close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'ml-3 text-white focus:outline-none';
+                closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                closeBtn.addEventListener('click', function() {
+                    filterBadge.remove();
+                });
                 
                 // Add to the page
                 document.body.appendChild(filterBadge);
             }
             
-            // Get filter values for display
-            const subFilter = document.getElementById('subFilter');
-            const programFilter = document.getElementById('programFilter');
-            
-            // Get the selected text values
-            let subFilterText = '';
-            let programFilterText = '';
-            
-            if (subFilter && subFilter.value !== 'all') {
-                subFilterText = subFilter.options[subFilter.selectedIndex].text;
-            }
-            
-            if (programFilter && programFilter.value !== 'all') {
-                programFilterText = programFilter.options[programFilter.selectedIndex].text;
-            }
-            
-            // Prepare the badge content
-            let badgeContent = `
-                <div class="flex flex-col">
-                    <div class="flex items-center">
-                        <i class="fas fa-filter mr-2"></i>
-                        <span class="font-semibold">${resultCount} result${resultCount !== 1 ? 's' : ''} found</span>
-                    </div>
-            `;
-            
-            // Add active filters to the badge
-            const activeFilters = [];
-            if (subFilterText) activeFilters.push(`Subscription: ${subFilterText}`);
-            if (programFilterText) activeFilters.push(`Program: ${programFilterText}`);
-            
-            if (activeFilters.length > 0) {
-                badgeContent += `<div class="text-xs mt-1 text-blue-100">${activeFilters.join(' • ')}</div>`;
-            }
-            
-            badgeContent += `</div>
-                <button class="ml-3 text-white hover:text-blue-200 focus:outline-none" onclick="this.parentElement.remove()">
+            // Update badge content
+            filterBadge.innerHTML = `
+                <i class="fas fa-filter mr-2"></i>
+                <span>Filters applied: ${resultCount} records found</span>
+                <button class="ml-3 text-white focus:outline-none" onclick="this.parentElement.remove()">
                     <i class="fas fa-times"></i>
                 </button>
             `;
-            
-            // Update badge content
-            filterBadge.innerHTML = badgeContent;
             
             // Make sure it's visible
             filterBadge.style.display = 'flex';
@@ -1980,73 +1879,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Set up date input handling
             setupDateInputs();
-            
-            // Initialize date pickers for the filter section
-            initDatePickers();
-            
-            // Fetch and populate dropdown options
-            fetchSubscriptionOptions();
-            fetchProgramOptions();
-            
-            // Fetch initial subscription data
-            fetchSubscriptionData();
         });
-        
-        // Function to fetch subscription options
-        function fetchSubscriptionOptions() {
-            fetch('../../api/subscription/get_subscription_options.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const subFilterSelect = document.getElementById('subFilter');
-                        if (subFilterSelect) {
-                            // Keep the "All Subscriptions" option
-                            const allOption = subFilterSelect.options[0];
-                            subFilterSelect.innerHTML = '';
-                            subFilterSelect.appendChild(allOption);
-                            
-                            // Add options from API
-                            data.subscriptions.forEach(subscription => {
-                                const option = document.createElement('option');
-                                option.value = subscription.id;
-                                option.textContent = subscription.name;
-                                subFilterSelect.appendChild(option);
-                            });
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching subscription options:', error);
-                });
-        }
-        
-        // Function to fetch program options
-        function fetchProgramOptions() {
-            fetch('../../api/program/get_program_options.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const programFilterSelect = document.getElementById('programFilter');
-                        if (programFilterSelect) {
-                            // Keep the "All Programs" option
-                            const allOption = programFilterSelect.options[0];
-                            programFilterSelect.innerHTML = '';
-                            programFilterSelect.appendChild(allOption);
-                            
-                            // Add options from API
-                            data.programs.forEach(program => {
-                                const option = document.createElement('option');
-                                option.value = program.id;
-                                option.textContent = program.name;
-                                programFilterSelect.appendChild(option);
-                            });
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching program options:', error);
-                });
-        }
         
         // Function to set up date inputs with MM/DD/YYYY format
         function setupDateInputs() {
@@ -2112,599 +1945,11 @@
             const day = String(date.getDate()).padStart(2, '0');
             return `${month}/${day}/${year}`;
         }
-
-        // Function to show toast notification
-        function showToast(message, isSuccess = true) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-            
-            if (!toast || !toastMessage || !toastIcon) return;
-            
-            // Set message
-            toastMessage.textContent = message;
-            
-            // Set icon and color based on status
-            if (isSuccess) {
-                toast.classList.remove('bg-red-600');
-                toast.classList.add('bg-green-600');
-                toastIcon.classList.remove('fa-exclamation-circle');
-                toastIcon.classList.add('fa-check-circle');
-            } else {
-                toast.classList.remove('bg-green-600');
-                toast.classList.add('bg-red-600');
-                toastIcon.classList.remove('fa-check-circle');
-                toastIcon.classList.add('fa-exclamation-circle');
-            }
-            
-            // Show the toast
-            toast.style.display = 'flex';
-            setTimeout(() => {
-                toast.classList.remove('translate-x-full', 'opacity-0');
-            }, 10);
-            
-            // Hide after 3 seconds
-            setTimeout(hideToast, 3000);
-        }
         
-        // Function to hide toast notification
-        function hideToast() {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            
-            toast.classList.add('translate-x-full', 'opacity-0');
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 300);
-        }
-        
-        // Function to show confirmation dialog
-        function showConfirmationDialog(title, message, confirmCallback) {
-            const dialog = document.getElementById('confirmationDialog');
-            const titleElement = document.getElementById('confirmationTitle');
-            const messageElement = document.getElementById('confirmationMessage');
-            const confirmButton = document.getElementById('confirmAction');
-            const cancelButton = document.getElementById('cancelConfirmation');
-            
-            if (!dialog || !titleElement || !messageElement || !confirmButton || !cancelButton) return;
-            
-            // Set dialog content
-            titleElement.textContent = title;
-            messageElement.textContent = message;
-            
-            // Remove any previous event listeners with a clone
-            const newConfirmButton = confirmButton.cloneNode(true);
-            confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-            
-            // Add new confirm action
-            newConfirmButton.addEventListener('click', function() {
-                // Hide the dialog
-                dialog.classList.add('hidden');
-                // Execute the callback
-                if (typeof confirmCallback === 'function') {
-                    confirmCallback();
-                }
-            });
-            
-            // Setup cancel button
-            cancelButton.addEventListener('click', function() {
-                dialog.classList.add('hidden');
-            });
-            
-            // Show the dialog
-            dialog.classList.remove('hidden');
-        }
-        
-        // Function to reset transaction modal UI for new transactions
-        function resetTransactionModalUI() {
-            // Reset member search section
-            const memberSearchContainer = document.querySelector('#addTransactionForm #memberSearch').closest('div').parentElement;
-            if (memberSearchContainer) {
-                memberSearchContainer.classList.remove('hidden');
-            }
-            
-            // Hide selected member info
-            const selectedMemberInfo = document.getElementById('selectedMemberInfo');
-            if (selectedMemberInfo) {
-                selectedMemberInfo.classList.add('hidden');
-            }
-            
-            // Reset member info section title
-            const memberInfoSection = document.querySelector('.mb-1');
-            if (memberInfoSection) {
-                const memberHeading = memberInfoSection.querySelector('span');
-                if (memberHeading) {
-                    memberHeading.textContent = "Member Information";
-                }
-            }
-            
-            // Reset the change member button
-            const changeMemberBtn = document.getElementById('changeMemberBtn');
-            if (changeMemberBtn) {
-                changeMemberBtn.classList.remove('hidden');
-            }
-            
-            // Reset form fields
-            document.getElementById('addTransactionForm').reset();
-            
-            // Reset any error states
-            document.querySelectorAll('#addTransactionForm .error-border').forEach(el => {
-                el.classList.remove('error-border');
-            });
-            document.querySelectorAll('#addTransactionForm .error-message').forEach(el => {
-                el.remove();
-            });
-            
-            // Reset subscription summary
-            document.getElementById('subName').textContent = '-';
-            document.getElementById('subDuration').textContent = '-';
-            document.getElementById('subStartDate').textContent = '-';
-            document.getElementById('subEndDate').textContent = '-';
-            document.getElementById('subPrice').textContent = '-';
-        }
-        
-        // Function to update summary cards with new data
-        function updateSummaryCards() {
-            // Fetch latest data or use the data we already have
-            fetch('../../api/transaction/get_transactions.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update summary cards with new values
-                        document.getElementById('totalTransactions').textContent = data.total_transactions;
-                        document.getElementById('totalRevenue').textContent = '$' + data.total_revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                        document.getElementById('recentTransactions').textContent = data.recent_transactions;
-                        
-                        // Refresh subscription data if needed
-                        fetchSubscriptionData();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating summary cards:', error);
-                });
-        }
-        
-        // Function to setup member search in the add transaction modal
-        function setupMemberSearchInModal() {
-            const memberSearch = document.getElementById('memberSearch');
-            const memberSearchResults = document.getElementById('memberSearchResults');
-            const selectedMemberInfo = document.getElementById('selectedMemberInfo');
-            const memberInitials = document.getElementById('memberInitials');
-            const memberName = document.getElementById('memberName');
-            const memberEmail = document.getElementById('memberEmail');
-            const selectedMemberId = document.getElementById('selectedMemberId');
-            const changeMemberBtn = document.getElementById('changeMemberBtn');
-            
-            if (!memberSearch || !memberSearchResults || !selectedMemberInfo) return;
-            
-            // Setup search input event
-            memberSearch.addEventListener('input', function() {
-                if (this.value.length < 2) {
-                    memberSearchResults.classList.add('hidden');
-                    return;
-                }
-                
-                // Simulate a search - in real implementation, this would call an API
-                const searchTerm = this.value.toLowerCase();
-                fetch(`../../api/member/search_members.php?term=${searchTerm}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear previous results
-                            memberSearchResults.innerHTML = '';
-                            
-                            if (data.members.length === 0) {
-                                memberSearchResults.innerHTML = '<div class="p-3 text-gray-500">No members found</div>';
-                            } else {
-                                data.members.forEach(member => {
-                                    const item = document.createElement('div');
-                                    item.className = 'autocomplete-item';
-                                    
-                                    // Get initials for avatar
-                                    let initials = '';
-                                    const nameParts = member.name.split(' ');
-                                    if (nameParts.length >= 2) {
-                                        initials = nameParts[0][0] + nameParts[1][0];
-                                    } else {
-                                        initials = nameParts[0][0];
-                                    }
-                                    
-                                    item.innerHTML = `
-                                        <div class="autocomplete-avatar">${initials}</div>
-                                        <div class="autocomplete-info">
-                                            <div class="autocomplete-name">${member.name}</div>
-                                            <div class="autocomplete-email">${member.email}</div>
-                                        </div>
-                                    `;
-                                    
-                                    // Add click event to select this member
-                                    item.addEventListener('click', function() {
-                                        // Hide search results
-                                        memberSearchResults.classList.add('hidden');
-                                        
-                                        // Clear search input
-                                        memberSearch.value = '';
-                                        
-                                        // Update selected member info
-                                        memberInitials.textContent = initials;
-                                        memberName.textContent = member.name;
-                                        memberEmail.textContent = member.email;
-                                        selectedMemberId.value = member.id;
-                                        
-                                        // Show selected member info
-                                        selectedMemberInfo.classList.remove('hidden');
-                                    });
-                                    
-                                    memberSearchResults.appendChild(item);
-                                });
-                            }
-                            
-                            // Show results
-                            memberSearchResults.classList.remove('hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error searching members:', error);
-                    });
-            });
-            
-            // Close search results when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!memberSearch.contains(e.target) && !memberSearchResults.contains(e.target)) {
-                    memberSearchResults.classList.add('hidden');
-                }
-            });
-            
-            // Setup change member button
-            if (changeMemberBtn) {
-                changeMemberBtn.addEventListener('click', function() {
-                    // Hide selected member info
-                    selectedMemberInfo.classList.add('hidden');
-                    
-                    // Clear selected member data
-                    selectedMemberId.value = '';
-                    
-                    // Focus search input
-                    memberSearch.focus();
-                });
-            }
-        }
-
-        // Initialize date pickers for filters
-        function initDatePickers() {
-            // Initialize flatpickr for start date
-            flatpickr("#startDate", {
-                dateFormat: "m/d/Y",
-                defaultDate: "today",
-                maxDate: "today",
-                disableMobile: "true",
-                onChange: function(selectedDates, dateStr, instance) {
-                    // Update the end date picker with a minimum date
-                    endDatePicker.set('minDate', dateStr);
-                }
-            });
-            
-            // Initialize flatpickr for end date
-            const endDatePicker = flatpickr("#endDate", {
-                dateFormat: "m/d/Y",
-                defaultDate: new Date().fp_incr(7), // Default to 7 days from today
-                disableMobile: "true"
-            });
-        }
-
-        // Add refresh button functionality
-        const refreshSubsBtn = document.getElementById('refreshSubsBtn');
-        if (refreshSubsBtn) {
-            refreshSubsBtn.addEventListener('click', function() {
-                // Show loading state
-                const originalHTML = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing...';
-                this.disabled = true;
-                
-                // Fetch latest subscription data
-                fetchSubscriptionData()
-                    .then(() => {
-                        // Restore button state
-                        this.innerHTML = originalHTML;
-                        this.disabled = false;
-                        
-                        // Show success notification
-                        showToast('Subscription data refreshed successfully!', true);
-                    })
-                    .catch(error => {
-                        console.error('Error refreshing subscription data:', error);
-                        
-                        // Restore button state
-                        this.innerHTML = originalHTML;
-                        this.disabled = false;
-                        
-                        // Show error notification
-                        showToast('Error refreshing data. Please try again.', false);
-                    });
-            });
-        }
-
-        // Add event listener for Apply Filters button
-        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
-        if (applyFiltersBtn) {
-            applyFiltersBtn.addEventListener('click', function() {
-                try {
-                    // Hide any existing errors
-                    hideErrorAlert();
-                    
-                    // Show loading state
-                    const originalHTML = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Applying...';
-                    this.disabled = true;
-                    
-                    // Get filter values
-                    const startDateInput = document.getElementById('startDate');
-                    const endDateInput = document.getElementById('endDate');
-                    const subFilterSelect = document.getElementById('subFilter');
-                    const programFilterSelect = document.getElementById('programFilter');
-                    const memberSearchInput = document.getElementById('memberSearch');
-                    
-                    // Format dates properly for API (YYYY-MM-DD)
-                    let startDate = '';
-                    let endDate = '';
-                    
-                    if (startDateInput && startDateInput._flatpickr) {
-                        const startDateObj = startDateInput._flatpickr.selectedDates[0];
-                        if (startDateObj) {
-                            startDate = formatDate(startDateObj); // YYYY-MM-DD format
-                        }
-                    } else if (startDateInput && startDateInput.value) {
-                        // Try to parse the date from the input value
-                        const parts = startDateInput.value.split('/');
-                        if (parts.length === 3) {
-                            // Handle MM/DD/YYYY format
-                            const month = parseInt(parts[0]) - 1;
-                            const day = parseInt(parts[1]);
-                            const year = parseInt(parts[2]);
-                            startDate = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                        }
-                    }
-                    
-                    if (endDateInput && endDateInput._flatpickr) {
-                        const endDateObj = endDateInput._flatpickr.selectedDates[0];
-                        if (endDateObj) {
-                            endDate = formatDate(endDateObj); // YYYY-MM-DD format
-                        }
-                    } else if (endDateInput && endDateInput.value) {
-                        // Try to parse the date from the input value
-                        const parts = endDateInput.value.split('/');
-                        if (parts.length === 3) {
-                            // Handle MM/DD/YYYY format
-                            const month = parseInt(parts[0]) - 1;
-                            const day = parseInt(parts[1]);
-                            const year = parseInt(parts[2]);
-                            endDate = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                        }
-                    }
-                    
-                    // Validate dates
-                    if (startDate && endDate) {
-                        const startDateObj = new Date(startDate);
-                        const endDateObj = new Date(endDate);
-                        
-                        if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-                            throw new Error("Invalid date format. Please use MM/DD/YYYY format.");
-                        }
-                        
-                        if (startDateObj > endDateObj) {
-                            throw new Error("Start date cannot be after end date.");
-                        }
-                    }
-                    
-                    const subFilter = subFilterSelect ? subFilterSelect.value : 'all';
-                    const programFilter = programFilterSelect ? programFilterSelect.value : 'all';
-                    const memberSearch = memberSearchInput ? memberSearchInput.value : '';
-                    
-                    // Highlight active filters visually
-                    highlightActiveFilters(subFilter, programFilter);
-                    
-                    // Build query string
-                    let queryParams = new URLSearchParams();
-                    if (startDate) queryParams.append('start_date', startDate);
-                    if (endDate) queryParams.append('end_date', endDate);
-                    if (subFilter && subFilter !== 'all') queryParams.append('subscription_id', subFilter);
-                    if (programFilter && programFilter !== 'all') queryParams.append('program_id', programFilter);
-                    if (memberSearch) queryParams.append('member_search', memberSearch);
-                    
-                    console.log("Filter API request:", `../../api/subscription/filter_subscriptions.php?${queryParams.toString()}`);
-                    
-                    // Fetch filtered data
-                    fetch(`../../api/subscription/filter_subscriptions.php?${queryParams.toString()}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! Status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                // Update subscription table with filtered data
-                                updateSubscriptionTable(data.subscriptions);
-                                
-                                // Show filter badge with count
-                                showFilterBadge(data.total);
-                                
-                                // Update expiring count
-                                const expiringElement = document.getElementById('expiringSubscriptions');
-                                if (expiringElement) {
-                                    expiringElement.textContent = data.expiring_count;
-                                }
-                                
-                                // Update table header to show filtered status
-                                updateTableHeaderStatus(data.total, subFilter, programFilter);
-                                
-                                // Show success notification
-                                showToast(`Found ${data.total} subscription(s) matching your filters`, true);
-                            } else {
-                                // Show error notification
-                                showErrorAlert('Error applying filters: ' + (data.message || 'Unknown error'));
-                                showToast('Error applying filters: ' + (data.message || 'Unknown error'), false);
-                            }
-                            
-                            // Restore button state
-                            this.innerHTML = originalHTML;
-                            this.disabled = false;
-                        })
-                        .catch(error => {
-                            console.error('Error applying filters:', error);
-                            
-                            // Restore button state
-                            this.innerHTML = originalHTML;
-                            this.disabled = false;
-                            
-                            // Show error alert
-                            showErrorAlert('Error applying filters. Please try again.');
-                            
-                            // Show error notification
-                            showToast('Error applying filters. Please try again.', false);
-                        });
-                } catch (error) {
-                    console.error('Error in filter application:', error);
-                    
-                    // Restore button state
-                    this.innerHTML = originalHTML;
-                    this.disabled = false;
-                    
-                    // Show error alert
-                    showErrorAlert(error.message || 'Error applying filters. Please try again.');
-                    
-                    // Show error notification
-                    showToast(error.message || 'Error applying filters. Please try again.', false);
-                }
-            });
-        }
-        
-        // Function to show error alert
-        function showErrorAlert(message) {
-            const errorAlert = document.getElementById('errorAlert');
-            const errorAlertMessage = document.getElementById('errorAlertMessage');
-            
-            if (!errorAlert || !errorAlertMessage) return;
-            
-            errorAlertMessage.textContent = message;
-            errorAlert.classList.remove('hidden');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                hideErrorAlert();
-            }, 5000);
-        }
-        
-        // Function to hide error alert
-        function hideErrorAlert() {
-            const errorAlert = document.getElementById('errorAlert');
-            if (errorAlert) {
-                errorAlert.classList.add('hidden');
-            }
-        }
-        
-        // Function to highlight active filters visually
-        function highlightActiveFilters(subFilter, programFilter) {
-            // Get the select elements
-            const subFilterSelect = document.getElementById('subFilter');
-            const programFilterSelect = document.getElementById('programFilter');
-            
-            // Reset all filter styles
-            [subFilterSelect, programFilterSelect].forEach(select => {
-                if (select) {
-                    select.parentElement.classList.remove('ring-2', 'ring-blue-500');
-                }
-            });
-            
-            // Highlight active subscription filter
-            if (subFilter && subFilter !== 'all' && subFilterSelect) {
-                subFilterSelect.parentElement.classList.add('ring-2', 'ring-blue-500');
-            }
-            
-            // Highlight active program filter
-            if (programFilter && programFilter !== 'all' && programFilterSelect) {
-                programFilterSelect.parentElement.classList.add('ring-2', 'ring-blue-500');
-            }
-        }
-        
-        // Function to update the table header status
-        function updateTableHeaderStatus(totalCount, subFilter, programFilter) {
-            const tableHeader = document.querySelector('#transactionResults h2 + p');
-            if (!tableHeader) return;
-            
-            let statusText = 'Showing ';
-            
-            // Add count
-            if (totalCount === 0) {
-                statusText += 'no subscriptions';
-            } else if (totalCount === 1) {
-                statusText += '1 subscription';
-            } else {
-                statusText += `${totalCount} subscriptions`;
-            }
-            
-            // Add filter information
-            const activeFilters = [];
-            
-            if (subFilter && subFilter !== 'all') {
-                const subText = document.querySelector(`#subFilter option[value="${subFilter}"]`)?.textContent || 'selected subscription';
-                activeFilters.push(subText);
-            }
-            
-            if (programFilter && programFilter !== 'all') {
-                const programText = document.querySelector(`#programFilter option[value="${programFilter}"]`)?.textContent || 'selected program';
-                activeFilters.push(programText);
-            }
-            
-            if (activeFilters.length > 0) {
-                statusText += ` filtered by ${activeFilters.join(' and ')}`;
-            }
-            
-            tableHeader.textContent = statusText;
-        }
-        
-        // Add event listener for Reset Filters button
-        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        if (resetFiltersBtn) {
-            resetFiltersBtn.addEventListener('click', function() {
-                // Reset date pickers to default values
-                const startDatePicker = document.getElementById('startDate')._flatpickr;
-                const endDatePicker = document.getElementById('endDate')._flatpickr;
-                
-                if (startDatePicker) {
-                    startDatePicker.setDate(new Date(), true);
-                }
-                
-                if (endDatePicker) {
-                    endDatePicker.setDate(new Date().fp_incr(7), true);
-                }
-                
-                // Reset dropdowns
-                document.getElementById('subFilter').value = 'all';
-                document.getElementById('programFilter').value = 'all';
-                document.getElementById('memberSearch').value = '';
-                
-                // Reset visual filter indicators
-                highlightActiveFilters('all', 'all');
-                
-                // Fetch all subscription data (unfiltered)
-                fetchSubscriptionData()
-                    .then((data) => {
-                        // Remove any filter badge if present
-                        const filterBadge = document.getElementById('filterBadge');
-                        if (filterBadge) filterBadge.remove();
-                        
-                        // Reset table header status
-                        updateTableHeaderStatus(data.subscriptions.length, 'all', 'all');
-                        
-                        // Show notification
-                        showToast('Filters reset successfully', true);
-                    })
-                    .catch(error => {
-                        console.error('Error resetting filters:', error);
-                        showToast('Error resetting filters. Please try again.', false);
-                    });
-            });
+        // Format date for display in standard readable format (Month DD, YYYY)
+        function formatDisplayDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
     </script>
 </body>

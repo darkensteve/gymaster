@@ -1,61 +1,63 @@
 <?php
-require_once '../../config/database.php';
 header('Content-Type: application/json');
+require_once '../../config/db_connect.php';
 
-try {
-    $search = isset($_GET['search']) ? $_GET['search'] : '';
+// Get the search term
+$searchTerm = isset($_GET['term']) && !empty($_GET['term']) ? $_GET['term'] : '';
+
+// Return empty results if search term is too short
+if (strlen($searchTerm) < 2) {
+    echo json_encode(array(
+        "success" => true,
+        "members" => array()
+    ));
+    exit;
+}
+
+// Build and execute the search query
+$sql = "SELECT MEMBER_ID, MEMBER_FNAME, MEMBER_LNAME, EMAIL 
+        FROM `MEMBER` 
+        WHERE MEMBER_FNAME LIKE ? OR MEMBER_LNAME LIKE ? OR EMAIL LIKE ? 
+        ORDER BY MEMBER_FNAME, MEMBER_LNAME
+        LIMIT 10";
+
+$stmt = $conn->prepare($sql);
+
+if ($stmt) {
+    $searchParam = "%$searchTerm%";
+    $stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    // Only proceed if at least 2 characters are entered
-    if (strlen($search) < 2) {
-        echo json_encode(['success' => true, 'members' => []]);
-        exit;
+    $members = array();
+    
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            // Add each member to the results
+            $members[] = array(
+                "id" => $row["MEMBER_ID"],
+                "name" => $row["MEMBER_FNAME"] . " " . $row["MEMBER_LNAME"],
+                "email" => $row["EMAIL"],
+                // Generate initials for the avatar
+                "initials" => substr($row["MEMBER_FNAME"], 0, 1) . substr($row["MEMBER_LNAME"], 0, 1)
+            );
+        }
     }
     
-    $query = "
-        SELECT 
-            m.MEMBER_ID,
-            m.MEMBER_FNAME,
-            m.MEMBER_LNAME,
-            m.EMAIL,
-            m.PHONE_NUMBER,
-            p.PROGRAM_NAME,
-            p.PROGRAM_ID
-        FROM `MEMBER` m
-        LEFT JOIN PROGRAM p ON m.PROGRAM_ID = p.PROGRAM_ID
-        WHERE m.IS_ACTIVE = 1
-        AND (
-            m.MEMBER_FNAME LIKE :search
-            OR m.MEMBER_LNAME LIKE :search
-            OR CONCAT(m.MEMBER_FNAME, ' ', m.MEMBER_LNAME) LIKE :search
-            OR m.EMAIL LIKE :search
-        )
-        ORDER BY 
-            CASE 
-                WHEN m.MEMBER_FNAME LIKE :exactSearch THEN 1
-                WHEN m.MEMBER_LNAME LIKE :exactSearch THEN 2
-                ELSE 3
-            END,
-            m.MEMBER_FNAME, 
-            m.MEMBER_LNAME
-        LIMIT 8
-    ";
+    $stmt->close();
     
-    $stmt = $conn->prepare($query);
-    $searchTerm = '%' . $search . '%';
-    $exactSearch = $search . '%';
-    $stmt->bindValue(':search', $searchTerm);
-    $stmt->bindValue(':exactSearch', $exactSearch);
-    $stmt->execute();
-    
-    echo json_encode([
-        'success' => true,
-        'members' => $stmt->fetchAll(PDO::FETCH_ASSOC)
-    ]);
-    
-} catch (PDOException $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error searching members: ' . $e->getMessage()
-    ]);
+    // Return the search results
+    echo json_encode(array(
+        "success" => true,
+        "members" => $members
+    ));
+} else {
+    // Error preparing statement
+    echo json_encode(array(
+        "success" => false,
+        "message" => "Database query error: " . $conn->error
+    ));
 }
+
+$conn->close();
 ?>

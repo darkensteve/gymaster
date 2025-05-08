@@ -442,11 +442,6 @@
                                 <select id="paymentMethod" name="PAYMENT_ID" 
                                     class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200 appearance-none bg-white" required>
                                     <option value="">Select Payment Method</option>
-                                    <option value="1">Cash</option>
-                                    <option value="2">Credit Card</option>
-                                    <option value="3">Debit Card</option>
-                                    <option value="4">Online Banking</option>
-                                    <option value="5">GCash</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
                                     <i class="fas fa-chevron-down text-xs"></i>
@@ -757,7 +752,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
-            document.getElementById('startDate').value = formattedDate;
+            const startDateInput = document.getElementById('startDate');
+            
+            // Set today as default value and minimum value
+            startDateInput.value = formattedDate;
+            startDateInput.min = formattedDate; // Prevents selecting dates before today
             
             // Set transaction date
             document.getElementById('transactionDate').value = formattedDate;
@@ -776,6 +775,9 @@
             
             // Initialize program filter
             initProgramFilter();
+            
+            // Fetch dropdown options
+            fetchDropdownOptions();
         });
         
         // Load members from the database - complete rewrite with debugging
@@ -1145,7 +1147,19 @@
             const subscriptionPrice = document.getElementById('subscriptionPrice');
             
             // When subscription type changes
-            subscriptionType.addEventListener('change', calculateEndDate);
+            subscriptionType.addEventListener('change', function() {
+                // If a subscription is selected, automatically set start date to today
+                if (subscriptionType.value) {
+                    const today = new Date();
+                    const formattedToday = today.toISOString().split('T')[0];
+                    startDate.value = formattedToday;
+                    
+                    // Then calculate end date based on the subscription duration
+                    calculateEndDate();
+                }
+            });
+            
+            // When start date changes manually
             startDate.addEventListener('change', calculateEndDate);
             
             function calculateEndDate() {
@@ -1205,7 +1219,9 @@
                 // Set today's date as default for start date
                 const today = new Date();
                 const formattedDate = today.toISOString().split('T')[0];
-                document.getElementById('startDate').value = formattedDate;
+                const startDateInput = document.getElementById('startDate');
+                startDateInput.value = formattedDate;
+                startDateInput.min = formattedDate; // Prevent selecting dates in the past
                 
                 // Reset member ID (new member)
                 document.getElementById('memberId').value = '';
@@ -1396,7 +1412,10 @@
                     
                     // Set today's date again
                     const today = new Date();
-                    document.getElementById('startDate').value = today.toISOString().split('T')[0];
+                    const formattedToday = today.toISOString().split('T')[0];
+                    const startDateInput = document.getElementById('startDate');
+                    startDateInput.value = formattedToday;
+                    startDateInput.min = formattedToday; // Prevent selecting dates in the past
                     
                     // Hide subscription summary
                     document.getElementById('subscriptionStatus').classList.add('hidden');
@@ -1724,6 +1743,14 @@
             // Set subscription type if available
             if (member.SUB_ID) {
                 subscriptionType.value = member.SUB_ID;
+                
+                // If we need to recalculate dates, we could trigger the change event
+                // But for now, we'll just use the dates from the database
+                // Since in edit mode, the subscription fields are read-only anyway
+                
+                // No need to trigger the change event as it would overwrite the dates from DB
+                // const event = new Event('change');
+                // subscriptionType.dispatchEvent(event);
             }
             
             // Set dates if available
@@ -1957,7 +1984,10 @@
                 
                 // Set today's date again
                 const today = new Date();
-                document.getElementById('startDate').value = today.toISOString().split('T')[0];
+                const formattedToday = today.toISOString().split('T')[0];
+                const startDateInput = document.getElementById('startDate');
+                startDateInput.value = formattedToday;
+                startDateInput.min = formattedToday; // Prevent selecting dates in the past
                 
                 // Hide subscription summary
                 document.getElementById('subscriptionStatus').classList.add('hidden');
@@ -1981,6 +2011,82 @@
                 // Clear the storage item to prevent duplicate refreshes
                 localStorage.removeItem('transactionAdded');
             }
+        });
+
+        // Function to fetch dropdown options (subscriptions and payment methods)
+        function fetchDropdownOptions() {
+            // Fetch subscription options
+            fetch('../../api/subscription/get_subscription_options.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateSubscriptionDropdown(data.subscriptions);
+                    } else {
+                        console.error('Error fetching subscription options');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching subscription options:', error);
+                });
+            
+            // Fetch payment method options
+            fetch('../../api/payment/get_payment_methods.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populatePaymentMethodDropdown(data.payment_methods);
+                    } else {
+                        console.error('Error fetching payment methods');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching payment methods:', error);
+                });
+        }
+
+        // Function to populate subscription dropdown
+        function populateSubscriptionDropdown(subscriptions) {
+            const subscriptionSelect = document.getElementById('subscriptionType');
+            if (subscriptionSelect) {
+                // Clear all options except the first one
+                while (subscriptionSelect.options.length > 1) {
+                    subscriptionSelect.remove(1);
+                }
+                
+                // Add new options from the data
+                subscriptions.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.text = `${sub.name} - ₱${parseFloat(sub.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    option.setAttribute('data-duration', sub.duration);
+                    option.setAttribute('data-price', sub.price);
+                    subscriptionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Function to populate payment method dropdown
+        function populatePaymentMethodDropdown(paymentMethods) {
+            const paymentSelect = document.getElementById('paymentMethod');
+            if (paymentSelect) {
+                // Clear all options except the first one
+                while (paymentSelect.options.length > 1) {
+                    paymentSelect.remove(1);
+                }
+                
+                // Add new options from the data
+                paymentMethods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method.id;
+                    option.text = method.name;
+                    paymentSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Call the function on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchDropdownOptions();
         });
     </script>
 </body>
